@@ -1,7 +1,7 @@
 import { Stack, StackProps } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
-import { LambdaRestApi } from "aws-cdk-lib/aws-apigateway";
+import { LambdaIntegration, LambdaRestApi } from "aws-cdk-lib/aws-apigateway";
 
 export class AwsCdkTestStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -14,8 +14,12 @@ export class AwsCdkTestStack extends Stack {
       functionName: functionName,
     });
 
-    new LambdaRestApi(this, "Endpoint", {
+    const api = new LambdaRestApi(this, "Endpoint", {
       handler: hello,
+      proxy: false,
     });
+
+    // Add a GET method to the API
+    api.root.addMethod("GET", new LambdaIntegration(hello));
   }
 }
