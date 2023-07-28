@@ -1,25 +1,27 @@
 import { Stack, StackProps } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
-import { LambdaIntegration, LambdaRestApi } from "aws-cdk-lib/aws-apigateway";
+import { LambdaIntegration, RestApi } from "aws-cdk-lib/aws-apigateway";
 
 export class AwsCdkTestStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    const functionName = "handler";
-    const hello = new NodejsFunction(this, functionName, {
-      entry: "lambda/hello.ts",
-      handler: functionName,
-      functionName: functionName,
-    });
+    const api = new RestApi(this, "blogPostApi");
 
-    const api = new LambdaRestApi(this, "Endpoint", {
-      handler: hello,
-      proxy: false,
-    });
+    const createBlogPostLambdaName = "createBlogPostHandler";
+    const createBlogPostLambda = new NodejsFunction(
+      this,
+      createBlogPostLambdaName,
+      {
+        entry: "lib/lambdas/blog-post-handler.ts",
+        handler: createBlogPostLambdaName,
+        functionName: createBlogPostLambdaName,
+      }
+    );
 
-    // Add a GET method to the API
-    api.root.addMethod("GET", new LambdaIntegration(hello));
+    // POST: https://example.com/blogposts
+    const blogPostPath = api.root.addResource("blogposts");
+    blogPostPath.addMethod("POST", new LambdaIntegration(createBlogPostLambda));
   }
 }
