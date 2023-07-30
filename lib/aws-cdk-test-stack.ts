@@ -15,6 +15,7 @@ export class AwsCdkTestStack extends Stack {
       partitionKey: { name: "id", type: AttributeType.STRING },
     });
 
+    // create
     const createBlogPostLambdaName = "createBlogPostHandler";
     const createBlogPostLambda = new NodejsFunction(
       this,
@@ -26,11 +27,29 @@ export class AwsCdkTestStack extends Stack {
         environment: { TABLE_NAME: table.tableName },
       }
     );
-
     table.grantWriteData(createBlogPostLambda);
 
-    // POST: https://example.com/blogposts
+    // list
+    const getBlogPostsLambdaName = "getBlogPostsHandler";
+    const getBlogPostsLambda = new NodejsFunction(
+      this,
+      getBlogPostsLambdaName,
+      {
+        entry: "lib/lambdas/blog-post-handler.ts",
+        handler: getBlogPostsLambdaName,
+        functionName: getBlogPostsLambdaName,
+        environment: { TABLE_NAME: table.tableName },
+      }
+    );
+    table.grantReadData(getBlogPostsLambda);
+
+    // https://example.com/blogposts
     const blogPostPath = api.root.addResource("blogposts");
     blogPostPath.addMethod("POST", new LambdaIntegration(createBlogPostLambda));
+    blogPostPath.addMethod("GET", new LambdaIntegration(getBlogPostsLambda), {
+      requestParameters: {
+        "method.request.querystring.order": false,
+      },
+    });
   }
 }
