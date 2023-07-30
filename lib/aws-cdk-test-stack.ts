@@ -43,6 +43,16 @@ export class AwsCdkTestStack extends Stack {
     );
     table.grantReadData(getBlogPostsLambda);
 
+    // get by id
+    const getBlogPostLambdaName = "getBlogPostHandler";
+    const getBlogPostLambda = new NodejsFunction(this, getBlogPostLambdaName, {
+      entry: "lib/lambdas/blog-post-handler.ts",
+      handler: getBlogPostLambdaName,
+      functionName: getBlogPostLambdaName,
+      environment: { TABLE_NAME: table.tableName },
+    });
+    table.grantReadData(getBlogPostLambda);
+
     // https://example.com/blogposts
     const blogPostPath = api.root.addResource("blogposts");
     blogPostPath.addMethod("POST", new LambdaIntegration(createBlogPostLambda));
@@ -51,5 +61,7 @@ export class AwsCdkTestStack extends Stack {
         "method.request.querystring.order": false,
       },
     });
+    const blogPostByIdPath = blogPostPath.addResource("{id}");
+    blogPostByIdPath.addMethod("GET", new LambdaIntegration(getBlogPostLambda));
   }
 }

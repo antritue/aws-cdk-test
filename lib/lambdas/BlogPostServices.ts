@@ -2,6 +2,7 @@ import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { BlogPost } from "./BlogPost";
 import {
   DynamoDBClient,
+  GetItemCommand,
   PutItemCommand,
   ScanCommand,
 } from "@aws-sdk/client-dynamodb";
@@ -27,4 +28,15 @@ export const getBlogPosts = async () => {
   const command = new ScanCommand(params);
   const { Items } = await db.send(command);
   return Items?.map((item) => unmarshall(item) as BlogPost) ?? [];
+};
+
+export const getBlogPost = async (id: string) => {
+  const params = {
+    TableName: TABLE_NAME,
+    Key: marshall({ id }),
+  };
+
+  const command = new GetItemCommand(params);
+  const { Item } = await db.send(command);
+  return Item ? (unmarshall(Item) as BlogPost) : null;
 };
