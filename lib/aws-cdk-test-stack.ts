@@ -53,6 +53,20 @@ export class AwsCdkTestStack extends Stack {
     });
     table.grantReadData(getBlogPostLambda);
 
+    // delete
+    const deleteBlogPostLambdaName = "deleteBlogPostHandler";
+    const deleteBlogPostLambda = new NodejsFunction(
+      this,
+      deleteBlogPostLambdaName,
+      {
+        entry: "lib/lambdas/blog-post-handler.ts",
+        handler: deleteBlogPostLambdaName,
+        functionName: deleteBlogPostLambdaName,
+        environment: { TABLE_NAME: table.tableName },
+      }
+    );
+    table.grantWriteData(deleteBlogPostLambda);
+
     // https://example.com/blogposts
     const blogPostPath = api.root.addResource("blogposts");
     blogPostPath.addMethod("POST", new LambdaIntegration(createBlogPostLambda));
@@ -63,5 +77,9 @@ export class AwsCdkTestStack extends Stack {
     });
     const blogPostByIdPath = blogPostPath.addResource("{id}");
     blogPostByIdPath.addMethod("GET", new LambdaIntegration(getBlogPostLambda));
+    blogPostByIdPath.addMethod(
+      "DELETE",
+      new LambdaIntegration(deleteBlogPostLambda)
+    );
   }
 }

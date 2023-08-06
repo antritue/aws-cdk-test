@@ -1,6 +1,7 @@
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { BlogPost } from "./BlogPost";
 import {
+  DeleteItemCommand,
   DynamoDBClient,
   GetItemCommand,
   PutItemCommand,
@@ -30,7 +31,7 @@ export const getBlogPosts = async () => {
   return Items?.map((item) => unmarshall(item) as BlogPost) ?? [];
 };
 
-export const getBlogPost = async (id: string) => {
+export const getBlogPostById = async (id: string) => {
   const params = {
     TableName: TABLE_NAME,
     Key: marshall({ id }),
@@ -39,4 +40,14 @@ export const getBlogPost = async (id: string) => {
   const command = new GetItemCommand(params);
   const { Item } = await db.send(command);
   return Item ? (unmarshall(Item) as BlogPost) : null;
+};
+
+export const deleteBlogPostById = async (id: string) => {
+  const params = {
+    TableName: TABLE_NAME,
+    Key: marshall({ id }),
+  };
+
+  const command = new DeleteItemCommand(params);
+  await db.send(command);
 };

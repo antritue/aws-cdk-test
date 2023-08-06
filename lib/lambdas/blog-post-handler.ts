@@ -1,7 +1,12 @@
 import { APIGatewayEvent } from "aws-lambda";
 import { BlogPost } from "./BlogPost";
 import * as crypto from "crypto";
-import { getBlogPost, getBlogPosts, saveBlogPost } from "./BlogPostServices";
+import {
+  deleteBlogPostById,
+  getBlogPostById,
+  getBlogPosts,
+  saveBlogPost,
+} from "./BlogPostServices";
 
 export const createBlogPostHandler = async (event: APIGatewayEvent) => {
   const partialBlogPost = JSON.parse(event.body!) as {
@@ -38,9 +43,17 @@ export const getBlogPostsHandler = async (event: APIGatewayEvent) => {
 
 export const getBlogPostHandler = async (event: APIGatewayEvent) => {
   const id = event.pathParameters!.id!;
-  const blogPost = await getBlogPost(id);
+  const blogPost = await getBlogPostById(id);
   return {
     statusCode: 200,
     body: JSON.stringify(blogPost),
+  };
+};
+
+export const deleteBlogPostHandler = async (event: APIGatewayEvent) => {
+  const id = event.pathParameters!.id!;
+  await deleteBlogPostById(id);
+  return {
+    statusCode: 204,
   };
 };
