@@ -3,6 +3,7 @@ import { Construct } from "constructs";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { LambdaIntegration, RestApi } from "aws-cdk-lib/aws-apigateway";
 import { AttributeType, Table } from "aws-cdk-lib/aws-dynamodb";
+import { PolicyStatement } from "aws-cdk-lib/aws-iam";
 
 export class AwsCdkTestStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -66,6 +67,24 @@ export class AwsCdkTestStack extends Stack {
       }
     );
     table.grantWriteData(deleteBlogPostLambda);
+
+    // api doc
+    const apiDocsLambdaName = "apiDocsHandler";
+    const apiDocsLambda = new NodejsFunction(this, apiDocsLambdaName, {
+      entry: "lib/lambdas/blog-post-handler.ts",
+      handler: apiDocsLambdaName,
+      functionName: apiDocsLambdaName,
+      environment: { API_ID: api.restApiId },
+    });
+
+    const policy = new PolicyStatement({
+      actions: ["apigateway:GET"],
+      resources: ["*"],
+    });
+    apiDocsLambda.role?.addToPrincipalPolicy(policy);
+
+    const apiDocsPath = api.root.addResource("api-docs");
+    apiDocsPath.addMethod("GET", new LambdaIntegration(apiDocsLambda));
 
     // https://example.com/blogposts
     const blogPostPath = api.root.addResource("blogposts");

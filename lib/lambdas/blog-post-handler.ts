@@ -7,6 +7,10 @@ import {
   getBlogPosts,
   saveBlogPost,
 } from "./BlogPostServices";
+import {
+  APIGatewayClient,
+  GetExportCommand,
+} from "@aws-sdk/client-api-gateway";
 
 export const createBlogPostHandler = async (event: APIGatewayEvent) => {
   const partialBlogPost = JSON.parse(event.body!) as {
@@ -55,5 +59,24 @@ export const deleteBlogPostHandler = async (event: APIGatewayEvent) => {
   await deleteBlogPostById(id);
   return {
     statusCode: 204,
+  };
+};
+
+export const apiDocsHandler = async (event: APIGatewayEvent) => {
+  const apitgateway = new APIGatewayClient({});
+  const restApiId = process.env.API_ID!;
+  const getExportCommand = new GetExportCommand({
+    restApiId,
+    exportType: "swagger",
+    accepts: "application/json",
+    stageName: "prod",
+  });
+
+  const api = await apitgateway.send(getExportCommand);
+  const response = Buffer.from(api.body!).toString("utf-8");
+
+  return {
+    statusCode: 200,
+    body: response,
   };
 };
