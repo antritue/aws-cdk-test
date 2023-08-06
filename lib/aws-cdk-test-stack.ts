@@ -84,7 +84,11 @@ export class AwsCdkTestStack extends Stack {
     apiDocsLambda.role?.addToPrincipalPolicy(policy);
 
     const apiDocsPath = api.root.addResource("api-docs");
-    apiDocsPath.addMethod("GET", new LambdaIntegration(apiDocsLambda));
+    apiDocsPath.addMethod("GET", new LambdaIntegration(apiDocsLambda), {
+      requestParameters: {
+        "method.request.querystring.ui": false,
+      },
+    });
 
     // https://example.com/blogposts
     const blogPostPath = api.root.addResource("blogposts");
